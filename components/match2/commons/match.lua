@@ -92,14 +92,24 @@ function Match.storeMatchGroup(matchRecords, options)
 		Array.forEach(matchRecordsCopy, Match.encodeJson)
 	end
 
+	if options.storeMatch2 then
+		for _, matchRecord in ipairs(matchRecordsCopy) do
+			local records
+			if LegacyMatch then
+				records = Match.splitRecordsByType(matchRecord)
+				Match.populateSubobjectReferences(records)
+			end
+			Match._storeMatch2InLpdb(matchRecord)
+			if LegacyMatch then
+				Match.populateSubobjectReferences(records)
+			end
+		end
+	end
+
 	if LegacyMatch then
 		Array.forEach(matchRecordsCopy, function(matchRecord)
 			LegacyMatch.storeMatch(matchRecord, options)
 		end)
-	end
-
-	if options.storeMatch2 then
-		Array.forEach(matchRecordsCopy, Match._storeMatch2InLpdb)
 	end
 end
 
