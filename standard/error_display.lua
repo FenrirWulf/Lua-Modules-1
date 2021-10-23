@@ -6,6 +6,8 @@
 -- Please see https://github.com/Liquipedia/Lua-Modules to contribute
 --
 
+local Arguments = require('Module:Arguments')
+local ErrorStash = require('Module:Error/Stash')
 local ErrorUtil = require('Module:Error/Util')
 local TypeUtil = require('Module:TypeUtil')
 
@@ -20,6 +22,38 @@ ErrorDisplay.types.Error = TypeUtil.struct{
 	originalErrors = TypeUtil.optional(TypeUtil.array(ErrorDisplay.types.Error)),
 	stacks = TypeUtil.optional(TypeUtil.array('string')),
 }
+
+ErrorDisplay.propTypes.StashedErrors = {
+	limit = 'number?',
+}
+
+function ErrorDisplay.StashedErrors(props)
+	local limit = props.limit or 5
+
+	local errors = ErrorStash.retrieve()
+
+	local boxesNode = mw.html.create('span'):addClass('stashed-errors')
+	for index, error in ipairs(errors) do
+		boxesNode:node(ErrorDisplay.ErrorBox(error))
+
+		if index == limit and limit < #errors then
+			local overflowNode = ErrorDisplay.Box({
+				text = (#errors - limit) .. ' additional errors not shown',
+			})
+			boxesNode:node(overflowNode)
+			break
+		end
+	end
+	return boxesNode
+end
+
+-- Entry point of Template:StashedErrors
+function ErrorDisplay.TemplateStashedErrors(frame)
+	local args = Arguments.getArgs(frame)
+	return ErrorDisplay.StashedErrors({
+		limit = tonumber(args.limit),
+	})
+end
 
 ErrorDisplay.propTypes.Box = {
 	hasDetails = 'boolean?',
