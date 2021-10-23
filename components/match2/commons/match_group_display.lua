@@ -8,7 +8,10 @@
 
 local Arguments = require('Module:Arguments')
 local Array = require('Module:Array')
+local DisplayUtil = require('Module:DisplayUtil')
+local ErrorDisplay = require('Module:Error/Display')
 local FeatureFlag = require('Module:FeatureFlag')
+local Logic = require('Module:Logic')
 local Lua = require('Module:Lua')
 local Table = require('Module:Table')
 
@@ -38,9 +41,10 @@ function MatchGroupDisplay.MatchlistBySpec(args)
 		})
 	end
 
-	local parts = Array.extend(
-		{matchlistNode},
-		Array.map(optionsWarnings, MatchGroupDisplay.WarningBox)
+	local parts = DisplayUtil.extendArray(
+		matchlistNode,
+		Array.map(optionsWarnings, MatchGroupDisplay.WarningBox),
+		ErrorDisplay.StashedErrors({}).nodes
 	)
 	return table.concat(Array.map(parts, tostring))
 end
@@ -63,10 +67,11 @@ function MatchGroupDisplay.BracketBySpec(args)
 		})
 	end
 
-	local parts = Array.extend(
+	local parts = DisplayUtil.extendArray(
 		Array.map(optionsWarnings, MatchGroupDisplay.WarningBox),
 		Array.map(bracketWarnings, MatchGroupDisplay.WarningBox),
-		{bracketNode}
+		ErrorDisplay.StashedErrors({}).nodes,
+		bracketNode
 	)
 	return table.concat(Array.map(parts, tostring))
 end
@@ -93,23 +98,22 @@ function MatchGroupDisplay.MatchGroupById(args)
 		config = BracketDisplay.configFromArgs(args)
 	end
 
-	MatchGroupInput.applyOverrideArgs(matches, args)
+	Logic.tryOrLog(function()
+		MatchGroupInput.applyOverrideArgs(matches, args)
+	end)
 
 	local MatchGroupContainer = require('Module:Brkts/WikiSpecific').getMatchGroupContainer(matchGroupType)
-	return MatchGroupContainer({
-		bracketId = bracketId,
-		config = config,
-	})
+	local matchGroupNode = MatchGroupContainer({bracketId = bracketId, config = config})
+	local parts = DisplayUtil.extendArray(
+		matchGroupType == 'matchlist' and matchGroupNode or nil,
+		ErrorDisplay.StashedErrors({}).nodes,
+		matchGroupType == 'bracket' and matchGroupNode or nil
+	)
+	return table.concat(Array.map(parts, tostring))
 end
 
 function MatchGroupDisplay.WarningBox(text)
-	local div = mw.html.create('div'):addClass('show-when-logged-in navigation-not-searchable ambox-wrapper')
-		:addClass('ambox wiki-bordercolor-dark wiki-backgroundcolor-light ambox-red')
-	local tbl = mw.html.create('table')
-	tbl:tag('tr')
-		:tag('td'):addClass('ambox-image'):wikitext('[[File:Emblem-important.svg|40px|link=]]'):done()
-		:tag('td'):addClass('ambox-text'):wikitext(text)
-	return div:node(tbl)
+	return ErrorDisplay.Box({text = text})
 end
 
 
