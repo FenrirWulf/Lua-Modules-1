@@ -6,6 +6,8 @@
 -- Please see https://github.com/Liquipedia/Lua-Modules to contribute
 --
 
+local Array = require('Module:Array')
+local ErrorDisplay = require('Module:Error/Display')
 local Logic = require('Module:Logic')
 local StringUtils = require('Module:StringUtils')
 
@@ -111,7 +113,7 @@ function Lua.invoke(frame)
 	local flags = {dev = Logic.readBoolOrNil(frame.args.dev)}
 	return require('Module:FeatureFlag').with(flags, function()
 		local module = Lua.import('Module:' .. moduleName, {requireDevIfEnabled = true})
-		return module[fnName](frame)
+		return Lua._callAndDisplayErrors(module[fnName], frame)
 	end)
 end
 
@@ -148,10 +150,23 @@ function Lua.wrapAutoInvoke(module, baseModuleName, fnName)
 		local flags = {dev = Logic.readBoolOrNil(dev)}
 		return require('Module:FeatureFlag').with(flags, function()
 			local variantModule = Lua.import(baseModuleName, {requireDevIfEnabled = true})
-			local fn = module == variantModule and moduleFn or variantModule[fnName]
-			return fn(frame)
+			if module == variantModule then
+				return Lua._callAndDisplayErrors(moduleFn, frame)
+			else
+				return variantModule[fnName](frame)
+			end
 		end)
 	end
+end
+
+function Lua._callAndDisplayErrors(fn, frame)
+	local parts = {
+		Logic.tryOrLog(function() return fn(frame) end) or '',
+	}
+	for _, node in ipairs(ErrorDisplay.StashedErrors({}).nodes) do
+		table.insert(parts, node)
+	end
+	return table.concat(Array.map(parts, tostring))
 end
 
 --[[
