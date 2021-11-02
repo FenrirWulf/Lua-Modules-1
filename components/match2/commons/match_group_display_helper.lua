@@ -11,6 +11,7 @@ local DisplayUtil = require('Module:DisplayUtil')
 local FnUtil = require('Module:FnUtil')
 local Json = require('Module:Json')
 local Lua = require('Module:Lua')
+local Opponent = require('Module:Opponent')
 local Table = require('Module:Table')
 
 local MatchGroupUtil = Lua.import('Module:MatchGroup/Util', {requireDevIfEnabled = true})
@@ -18,21 +19,18 @@ local MatchGroupUtil = Lua.import('Module:MatchGroup/Util', {requireDevIfEnabled
 local DisplayHelper = {}
 local _NONBREAKING_SPACE = '&nbsp;'
 
+--[[
+Deprecated. Use Opponent.typeIsParty
+]]
 function DisplayHelper.opponentTypeIsParty(opponentType)
-	return opponentType == 'solo'
-		or opponentType == 'duo'
-		or opponentType == 'trio'
-		or opponentType == 'quad'
+	return Opponent.typeIsParty(opponentType)
 end
 
+--[[
+Deprecated. Use Opponent.isTbd
+]]
 function DisplayHelper.opponentIsTBD(opponent)
-	return opponent.type == 'literal'
-		or opponent.type == 'team' and opponent.template == 'tbd'
-		or opponent.name == 'TBD'
-
-		-- solo/duo/trio/quad opponents are TBD if any of its players are marked TBD
-		or (DisplayHelper.opponentTypeIsParty(opponent.type)
-			and Array.any(opponent.players, function(player) return player.displayName == 'TBD' end))
+	return Opponent.isTbd(opponent)
 end
 
 -- Whether to allow highlighting an opponent via mouseover
