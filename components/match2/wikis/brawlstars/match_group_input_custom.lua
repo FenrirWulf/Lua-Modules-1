@@ -58,9 +58,7 @@ function CustomMatchGroupInput.processMap(frame, map)
 	return map
 end
 
--- called from Module:Match/Subobjects
-function CustomMatchGroupInput.processOpponent(frame, opponent)
-	_frame = frame
+function CustomMatchGroupInput.processOpponent(opponent)
 	if not Logic.isEmpty(opponent.template) and
 		string.lower(opponent.template) == 'bye' then
 			opponent.name = 'BYE'
@@ -72,6 +70,8 @@ function CustomMatchGroupInput.processOpponent(frame, opponent)
 	--if opponent.type == 'solo' and players == nil then
 		--opponent = opponentFunctions.getSoloFromLegacy(opponent)
 	--end
+
+	opponent.match2players = opponent.players or Json.parseIfString(opponent.match2players)
 
 	return opponent
 end
@@ -216,6 +216,8 @@ function matchFunctions.getOpponents(args)
 		-- read opponent
 		local opponent = args['opponent' .. opponentIndex]
 		if not Logic.isEmpty(opponent) then
+			opponent = CustomMatchGroupInput.processOpponent(opponent)
+
 			--retrieve name and icon for teams from team templates
 			if opponent.type == 'team' and
 				not Logic.isEmpty(opponent.template, args.date) then

@@ -61,8 +61,7 @@ function CustomMatchGroupInput.processMap(_, map)
 	return map
 end
 
--- called from Module:Match/Subobjects
-function CustomMatchGroupInput.processOpponent(_, opponent)
+function CustomMatchGroupInput.processOpponent(opponent)
 	-- check for empty team and convert to literal
 	if type(opponent) == 'table' and opponent.type == 'team' and Logic.isEmpty(opponent.template) then
 		opponent.name = ''
@@ -74,6 +73,8 @@ function CustomMatchGroupInput.processOpponent(_, opponent)
 			opponent.name = 'BYE'
 			opponent.type = 'literal'
 	end
+
+	opponent.match2players = opponent.players or Json.parseIfString(opponent.match2players)
 
 	return opponent
 end
@@ -417,6 +418,7 @@ function matchFunctions.getOpponents(match)
 		-- read opponent
 		local opponent = match['opponent' .. opponentIndex]
 		if not Logic.isEmpty(opponent) then
+			opponent = CustomMatchGroupInput.processOpponent(opponent)
 
 			--retrieve name and icon for teams from team templates
 			if opponent.type == 'team' and

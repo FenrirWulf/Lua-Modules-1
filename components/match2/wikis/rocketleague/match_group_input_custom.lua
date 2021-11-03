@@ -64,9 +64,7 @@ function p.processMap(frame, map)
 	return map
 end
 
--- called from Module:Match/Subobjects
-function p.processOpponent(frame, opponent)
-	_frame = frame
+function p.processOpponent(opponent)
 	if not Logic.isEmpty(opponent.template) and
 		string.lower(opponent.template) == 'bye' then
 			opponent.name = 'BYE'
@@ -92,6 +90,8 @@ function p.processOpponent(frame, opponent)
 			additionalScores = true
 		}
 	end
+
+	opponent.match2players = opponent.players or Json.parseIfString(opponent.match2players)
 
 	return opponent
 end
@@ -265,6 +265,8 @@ function matchFunctions.getOpponents(args)
 		-- read opponent
 		local opponent = Json.parseIfString(args['opponent' .. opponentIndex])
 		if not Logic.isEmpty(opponent) then
+			opponent = p.processOpponent(opponent)
+
 			--retrieve name and icon for teams from team templates
 			if opponent.type == 'team' and
 				not Logic.isEmpty(opponent.template, args.date) then

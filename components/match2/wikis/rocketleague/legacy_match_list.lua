@@ -11,6 +11,7 @@ local LegacyMatchList = {}
 local Logic = require('Module:Logic')
 local Lua = require('Module:Lua')
 local Table = require('Module:Table')
+local WikiSpecific = require('Module:Brkts/WikiSpecific')
 local getArgs = require('Module:Arguments').getArgs
 local json = require('Module:Json')
 
@@ -90,11 +91,11 @@ function LegacyMatchList.convertMatchMaps(frame)
 		end
 
 		if template ~= 'tbd' then
-			args['opponent' .. index] = MatchSubobjects.luaGetOpponent(frame, {
-					type = 'team',
-					template = template,
-					score = score,
-				})
+			args['opponent' .. index] = WikiSpecific.processOpponent({
+				score = score,
+				template = template,
+				type = 'team',
+			})
 		end
 		args['opponent' .. index .. 'literal'] = args['team' .. index .. 'literal']
 
@@ -145,18 +146,18 @@ function LegacyMatchList.convertSwissMatchMaps(frame)
 			end
 		end
 		if player ~= 'TBD' then
-			args['opponent' .. index] = MatchSubobjects.luaGetOpponent(frame, {
-					type = 'solo',
-					match2players = {
-						{
-							name = playerLink,
-							displayname = player,
-							flag = args['p' .. index .. 'flag'],
-						},
+			args['opponent' .. index] = WikiSpecific.processOpponent({
+				type = 'solo',
+				match2players = {
+					{
+						name = playerLink,
+						displayname = player,
+						flag = args['p' .. index .. 'flag'],
 					},
-					template = args['p' .. index .. 'team'],
-					score = score,
-				})
+				},
+				template = args['p' .. index .. 'team'],
+				score = score,
+			})
 		end
 		args['opponent' .. index .. 'literal'] = args['team' .. index .. 'literal']
 
